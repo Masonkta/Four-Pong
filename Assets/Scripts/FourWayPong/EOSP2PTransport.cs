@@ -250,18 +250,48 @@ namespace FourWayPong
 
         private bool OpenConnection(ProductUserId remoteUser)
         {
-            AcceptConnectionOptions options = new AcceptConnectionOptions
+            // EOS P2P is bidirectional. Pre-accept the server so its response packets
+            // are allowed, then SEND a packet to actually initiate the outbound
+            // connection request/NAT traversal. AcceptConnection by itself does not
+            // create an outgoing peer request.
+            AcceptConnectionOptions acceptOptions = new AcceptConnectionOptions
             {
                 LocalUserId = _localUser,
                 RemoteUserId = remoteUser,
                 SocketId = _socketId
             };
-            Result result = _p2p.AcceptConnection(ref options);
-            if (result != Result.Success)
+
+            Result acceptResult = _p2p.AcceptConnection(ref acceptOptions);
+            if (acceptResult != Result.Success)
             {
-                Debug.LogError("EOSP2PTransport: could not request P2P connection: " + result);
+                Debug.LogError("EOSP2PTransport: could not pre-accept dedicated server P2P connection: " + acceptResult);
                 return false;
             }
+
+            Debug.Log("EOSP2PTransport: sending dedicated-server connection probe to " + remoteUser + ".");
+
+            // A tiny reliable packet causes EOS to create the real peer connection
+            // request. The server's OnConnectionRequest callback accepts it and sends
+            // ConnectionConfirmationPacket back on this same private channel.
+            byte[] probe = { (byte)'F', (byte)'W', (byte)'P', (byte)'?' };
+            SendPacketOptions probeOptions = new SendPacketOptions
+            {
+                LocalUserId = _localUser,
+                RemoteUserId = remoteUser,
+                SocketId = _socketId,
+                AllowDelayedDelivery = true,
+                Channel = ConnectionConfirmationChannel,
+                Reliability = PacketReliability.ReliableOrdered,
+                Data = new ArraySegment<byte>(probe)
+            };
+
+            Result sendResult = _p2p.SendPacket(ref probeOptions);
+            if (sendResult != Result.Success)
+            {
+                Debug.LogError("EOSP2PTransport: dedicated-server connection probe failed: " + sendResult);
+                return false;
+            }
+
             return true;
         }
 
