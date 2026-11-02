@@ -1,0 +1,38 @@
+{
+  "ProductName": "Pong 4 Person",
+  "ProductId": "52200edbe42c46c1a2973d4e3aba9ac3",
+  "ProductVersion": "1",
+  "imported": true,
+  "Clients": [
+    {
+      "Value": {
+        "ClientId": "xyza7891n3dZrhmoDXwVqSIdJx4cNBAS",
+        "ClientSecret": "EEa7lf5Qr65Dq/uJLsupySSxg91p7biwHn1I9L2lDzo",
+        "EncryptionKey": "5EEA45428B45DB2352F067AF9C586DDD4ADBE38455737E5959A263E45EE0E464"
+      },
+      "Name": "Client"
+    }
+  ],
+  "Environments": {
+    "Deployments": [
+      {
+        "Value": {
+          "SandboxId": {
+            "Value": "f5a5335f6a7044708b26a954cf953bc1"
+          },
+          "DeploymentId": "e8e512d9919e4c568f64bdfa056b9015"
+        },
+        "Name": "Deployment"
+      }
+    ],
+    "Sandboxes": [
+      {
+        "Value": {
+          "Value": "f5a5335f6a7044708b26a954cf953bc1"
+        },
+        "Name": "Sandbox"
+      }
+    ]
+  },
+  "schemaVersion": "1.0"
+}

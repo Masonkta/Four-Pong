@@ -1,0 +1,78 @@
+FOUR-WAY PONG — EOS ROOM CODE SETUP
+====================================
+
+WHAT THIS VERSION DOES
+----------------------
+Multiplayer no longer uses IP addresses, ports, Playit, Unity Relay, or Unity Lobby.
+
+Host flow:
+  Multiplayer -> Host -> Host Game -> a 6-character room code appears.
+
+Join flow:
+  Multiplayer -> Join -> enter that 6-character code -> Join Game.
+
+The host's PC still runs the authoritative Netcode for GameObjects host.
+Epic Online Services (EOS) provides the lobby identity plus P2P/NAT traversal path.
+Players use EOS Connect Device ID automatically; there is no Epic-account login screen in this game.
+
+ONE-TIME DEVELOPER SETUP
+------------------------
+You, the developer, must connect the project to an EOS Product once. This cannot be pre-filled in a shared ZIP because the Product/Client credentials belong to your Epic developer product.
+
+1. Sign in to the Epic Developer Portal and create/select an EOS product.
+2. Create a deployment for the sandbox you want to test with.
+3. Create a CLIENT POLICY for the downloadable game client.
+   - It must be a normal user client policy, NOT a trusted-server policy.
+   - Allow the EOS features used by this project: Lobbies and P2P.
+4. Create/assign a Client to that policy.
+5. Open this Unity project and allow Package Manager to install the EOS Plugin for Unity.
+6. In Unity open:
+      EOS Plugin -> EOS Configuration
+7. Copy the values from Epic Developer Portal Product Settings into the matching fields:
+      Product Name
+      Product ID
+      Sandbox ID
+      Deployment ID
+      Client ID
+      Client Secret
+      Product Version
+      Encryption Key
+8. Save/apply the EOS configuration.
+9. Use:
+      Four-Way Pong -> Rebuild Main Scene
+   if the scene was generated before EOS finished importing.
+10. Enter Play Mode. On Multiplayer, the status should change from
+      Starting Epic Online Services...
+   to
+      Online services ready.
+
+IMPORTANT
+---------
+Do not configure the downloadable Windows game with a trusted-server client policy.
+The game runs on players' PCs, so use a normal user-required client policy.
+
+TESTING ON ONE WINDOWS PC
+-------------------------
+EOS Device ID identifies one installation/device profile. For a true two-player EOS test, use two PCs (or otherwise isolate the app data/device identity). The simplest reliable test is:
+
+PC A: build/launch -> Multiplayer -> Host -> copy room code.
+PC B: same build -> Multiplayer -> Join -> enter room code.
+
+No port-forwarding is needed.
+
+ROOM CODE IMPLEMENTATION
+------------------------
+Displayed code: 6 characters, excluding confusing characters such as O/0 and I/1.
+EOS lobby ID: FWP-<CODE>
+The lobby is created with Join-by-ID enabled, so the client can join directly from the shared code rather than performing a public lobby search.
+
+NETWORK STACK
+-------------
+- Unity 6.0 LTS
+- Netcode for GameObjects 2.7.0
+- EOS Plugin for Unity 6.2.0
+- EOS Lobby for the room/code identity
+- EOS P2P for game packets and NAT traversal
+- Custom EOSP2PTransport bridges EOS P2P into Netcode for GameObjects
+
+There is no Unity Transport dependency in this version's manifest.

@@ -1,0 +1,100 @@
+BRICK BATTLE 99 - SELF-HOSTED DEDICATED SERVER + EOS SESSIONS/P2P
+
+IMPORTANT ARCHITECTURE NOTE
+The Battle 99 server is a headless/dedicated Unity process, but its actual gameplay connection still
+uses EOS P2P/relay. EOS Sessions is used to advertise/discover the server. This is intentional so a
+server running on your home PC does not require normal router port forwarding.
+
+Because the current server transport uses EOS P2P, the server signs into EOS Connect and has its own
+Product User ID. For THIS build, use a separate Peer2Peer client policy with User Required enabled.
+Do not use the TrustedServer preset yet. A future direct-IP/datacenter transport can use TrustedServer,
+but that is a different networking design.
+
+ONE EOS PRODUCT
+Keep the same EOS Product ID, Sandbox ID and Deployment ID that the normal 4-player game already uses.
+Do not create a second EOS product for Battle 99.
+
+EOS DEVELOPER PORTAL SETUP
+1. Open your existing EOS product.
+2. Product Settings > Clients.
+3. Leave the normal 4-player client and policy in place.
+4. Under Client policies, click Add new client policy.
+5. Name: Battle99 Server P2P
+6. Client policy type: Peer2Peer
+7. User Required: ENABLED / checked.
+8. Create the policy.
+9. Under Clients, click Add new client.
+10. Name: Battle99 Dedicated Server
+11. Client policy: Battle99 Server P2P
+12. Create the client.
+13. Copy its Client ID and Client Secret somewhere private. Do not post them in chat or source control.
+
+WHY PEER2PEER
+The public game client and the dedicated server communicate through EOS P2P/relay. Epic's Peer2Peer
+policy is also capable of EOS Sessions, which Battle 99 uses for server discovery. The server code
+logs in through EOS Connect with Device ID, creates an advertised Session, and then accepts P2P game
+traffic from clients.
+
+UNITY SETUP AFTER INSTALLING THIS PATCH
+1. Extract this ZIP into the Unity project root and allow replacement of the prior Battle 99 files.
+2. Open the project and let Unity compile.
+3. Keep your normal EOS Plugin configuration pointed at the existing PLAYER client.
+4. In Unity open:
+   Four Way Pong > Battle 99 > Server EOS Credentials
+5. Paste only the NEW Battle99 Dedicated Server Client ID and Client Secret there.
+6. Click Save.
+
+The server credentials are stored locally in Unity EditorPrefs. They are not written into the project
+source tree. During a dedicated-server build, the build helper temporarily swaps the PlayEveryWare EOS
+platform configuration to the server credential, builds, then restores the normal player credential in
+a finally block even if the build fails.
+
+BUILD SERVER
+Unity menu:
+Four Way Pong > Build Battle 99 Server > Windows x64
+or
+Four Way Pong > Build Battle 99 Server > Linux x64
+
+Windows output:
+Builds/Battle99Server/Windows/FourWayPongServer.exe
+
+Linux output:
+Builds/Battle99Server/Linux/FourWayPongServer.x86_64
+
+DO NOT DISTRIBUTE THE SERVER BUILD TO PLAYERS.
+The server build contains the server-only EOS client credential. Your normal client build keeps using
+your existing player client credential.
+
+RUN WINDOWS SERVER
+FourWayPongServer.exe -batchmode -nographics -logFile Battle99Server.log
+
+RUN LINUX SERVER
+./FourWayPongServer.x86_64 -batchmode -nographics -logFile Battle99Server.log
+
+The Dedicated Server subtarget automatically enters Battle 99 server mode. The -battle99-server flag
+is only needed when testing server mode from a normal standalone build.
+
+TEST FROM A NORMAL STANDALONE BUILD
+FourWayPong.exe -batchmode -nographics -battle99-server
+
+Note: a normal standalone test build uses whatever EOS client credential was built into that normal
+standalone. For the clean two-client setup, use the actual dedicated-server build created by the menu.
+
+CURRENT NETWORK MODEL
+- EOS Sessions: server advertisement/discovery and registered-player counts.
+- EOS P2P/relay: actual client <-> dedicated-server gameplay traffic, avoiding normal home port forwarding.
+- Dedicated Unity server: queue, Ready state, match lock, attacks, garbage routing, eliminations,
+  placements, disconnect handling and winner selection.
+- Player client: responsive local Breakout board simulation.
+- Opponent previews: compact snapshots batched by the dedicated server.
+
+CAPACITY
+2-99 players per server process.
+One dedicated server process owns one waiting queue/active match at a time.
+Run additional server processes for additional simultaneous Battle 99 matches.
+
+LOCAL TESTING CAVEAT
+EOS Device ID is tied to the OS/device profile. Do not assume that a client and server launched under
+the same Windows profile will receive different Product User IDs. For reliable same-machine testing,
+use a different Windows account/profile for the server, a VM/container, or a second PC. In normal
+operation your server PC can simply run the dedicated-server build continuously.
